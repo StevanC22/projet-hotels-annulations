@@ -26,6 +26,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 - Saisonnalité : mois d'arrivée gardé (Algarve 15,0 % en janvier, 33,7 % en août ; Lisbonne 37,1 % à 46,4 %). Variantes testées sans gain (mois par hôtel, saison, semaine, jour d'arrivée) : exactitude 72,2 à 72,4 %, AUC 0,77.
 - Écartées : statut_final et annulee (la cible), chambre_changee (connue à l'arrivée), demandes_speciales (peut changer après la réservation), reservation, date_arrivee, annee.
 - Référence "personne n'annule" : 61,2 % d'exactitude. Score (AUC) 79,5 %, affiché sous le nom "Score" dans le notebook et l'application. Modèle au seuil 0,5 : exactitude 72,7 %, précision 77,9 %, rappel 41,4 % (8 333 réservations signalées).
+- Seuil par défaut du tableau de bord : 0,4 (exactitude 71,8 %, précision 62,5 %, rappel 68,9 %, 17 317 réservations signalées), car le rappel à 0,5 n'est que de 41,4 %. Le notebook affiche aussi ce seuil en 3.5.
 - Seuils : 0,6 pour la surréservation (précision 95,7 %, rappel 27,4 %), 0,3 pour les relances (précision 55,4 %, rappel 83,7 %).
 - Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : score 76,2 %, exactitude 70,8 %.
 - Points à vérifier avec l'hôtel : 99,4 % des dépôts non remboursables sont annulés, 94,5 % des clients avec une annulation précédente.

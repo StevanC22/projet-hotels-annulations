@@ -185,18 +185,20 @@ with onglet2:
 
     # Deux seuils recommandés, plus un réglage libre
     if "seuil" not in st.session_state:
-        st.session_state["seuil"] = 0.5
+        st.session_state["seuil"] = 0.4
 
     def regler(valeur):
         st.session_state["seuil"] = valeur
 
-    b1, b2, _ = st.columns([1, 1, 3])
+    b1, b2, b3, _ = st.columns([1, 1, 1, 2])
     b1.button("Seuil 0,3 : relances", on_click=regler, args=(0.3,))
-    b2.button("Seuil 0,6 : surréservation", on_click=regler, args=(0.6,))
+    b2.button("Seuil 0,4 : équilibre", on_click=regler, args=(0.4,))
+    b3.button("Seuil 0,6 : surréservation", on_click=regler, args=(0.6,))
     seuil = st.slider("Seuil d'alerte (on signale la réservation si le risque dépasse ce seuil)",
                       0.1, 0.9, step=0.05, key="seuil")
     st.caption("Seuil haut (0,6 et plus) : peu de fausses alertes, adapté à la surréservation. "
-               "Seuil bas (0,3) : on repère la plupart des annulations, adapté aux relances.")
+               "Seuil bas (0,3) : on repère la plupart des annulations, adapté aux relances. "
+               "Seuil 0,4 : compromis entre les deux.")
 
     prevu = (proba_test >= seuil).astype(int)
     reference = 1 - y_test.mean()
