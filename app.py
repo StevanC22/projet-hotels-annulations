@@ -8,6 +8,12 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, confu
 
 st.set_page_config(page_title="Annulations hôtelières", layout="wide")
 
+# Aspect commun des graphiques : mêmes couleurs pour les deux hôtels partout, texte lisible
+COULEURS = {"Lisbonne": "#1F5FA8", "Algarve": "#E8833A"}
+COULEUR_BARRES = "#5B7DB1"
+plt.rcParams.update({"font.size": 10, "axes.titlesize": 12, "axes.spines.top": False,
+                     "axes.spines.right": False, "axes.grid": True, "grid.alpha": 0.25})
+
 
 def fr(nombre, decimales=0):
     # écrit un nombre à la française : 25 950 266 ou 0,76
@@ -20,7 +26,7 @@ def pc(proportion):
 
 
 # ---------- 1. Données propres (étape 1 du notebook) ----------
-@st.cache_data
+@st.cache_data(show_spinner="Chargement et nettoyage des données...")
 def charger():
     d = pd.read_csv("reservations_hotels.csv")
     d["enfants"] = d["enfants"].fillna(0)                       # 4 valeurs manquantes -> 0
@@ -74,7 +80,7 @@ COLONNES = ["hotel", "mois", "delai_reservation", "nuits", "adultes", "enfants",
 QUALITATIVES = ["hotel", "mois", "segment", "type_client", "depot"]
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner="Entraînement du modèle de prévision en cours, environ une minute au premier affichage...")
 def entrainer():
     X = pd.get_dummies(propres[COLONNES], columns=QUALITATIVES, dtype=int)
     y = propres["annulee"]
@@ -103,12 +109,14 @@ with onglet1:
         st.warning("Aucune réservation avec ces filtres.")
     else:
         k = indicateurs(t)
-        c = st.columns(5)
-        c[0].metric("Taux d'annulation", pc(k["taux"]))
-        c[1].metric("CA réalisé", fr(k["ca"]) + " €")
-        c[2].metric("Nuits vendues", fr(k["nuits"]))
-        c[3].metric("Prix moyen par nuit", fr(k["prix"], 2) + " €")
-        c[4].metric("CA annulé", fr(k["ca_annule"]) + " €")
+        cartes = [("Taux d'annulation", pc(k["taux"]), "Réservations annulées ou non présentées / toutes les réservations"),
+                  ("CA réalisé", fr(k["ca"]) + " €", "Nuits x prix des séjours effectués"),
+                  ("Nuits vendues", fr(k["nuits"]), "Nuits des séjours effectués"),
+                  ("Prix moyen par nuit", fr(k["prix"], 2) + " €", "CA réalisé / nuits vendues"),
+                  ("CA annulé", fr(k["ca_annule"]) + " €", "Nuits x prix des réservations annulées")]
+        for colonne, (nom, valeur, aide) in zip(st.columns(5), cartes):
+            with colonne.container(border=True):
+                st.metric(nom, valeur, help=aide)
         st.caption("Taux d'annulation : annulées ou non présentées / toutes les réservations. "
                    "CA réalisé, nuits et prix moyen : séjours effectués (prix moyen = CA / nuits). "
                    "CA annulé : nuits x prix des réservations annulées.")
@@ -117,40 +125,41 @@ with onglet1:
         choix = st.selectbox("Indicateur à suivre mois par mois", list(CHOIX_MENSUEL))
         cle, unite, facteur = CHOIX_MENSUEL[choix]
         mensuel = par_mois(t, cle, facteur)
-        fig, ax = plt.subplots(figsize=(12, 3.8))
-        for h in mensuel.columns:
-            ax.plot(mensuel.index, mensuel[h], marker="o", label=h)
-        ax.set_title(choix + " par mois d'arrivée"); ax.set_ylabel(unite)
-        ax.legend(); ax.grid(alpha=0.3); fig.autofmt_xdate()
-        st.pyplot(fig)
+        gauche, droite = st.columns([2, 1])
+        with gauche:
+            fig, ax = plt.subplots(figsize=(10, 3.6))
+            for h in mensuel.columns:
+                ax.plot(mensuel.index, mensuel[h], marker="o", markersize=4, linewidth=2,
+                        label=h, color=COULEURS[h])
+            ax.set_title(choix + " par mois d'arrivée"); ax.set_ylabel(unite)
+            ax.legend(frameon=False); fig.autofmt_xdate()
+            st.pyplot(fig)
+        with droite:
+            st.subheader("Par hôtel")
+            lignes = [("Réservations", "réservations", fr), ("Taux d'annulation", "taux", pc),
+                      ("CA réalisé (€)", "ca", fr), ("Nuits vendues", "nuits", fr),
+                      ("Prix moyen (€)", "prix", lambda v: fr(v, 2)), ("CA annulé (€)", "ca_annule", fr)]
+            par_hotel = {h: indicateurs(t[t["hotel"] == h]) for h in hotels}
+            tab = pd.DataFrame({h: {nom: mise_en_forme(par_hotel[h][cle_h]) for nom, cle_h, mise_en_forme in lignes}
+                                for h in hotels})
+            st.dataframe(tab)
 
         g1, g2 = st.columns(2)
         with g1:
             classes = pd.cut(t["delai_reservation"], [-1, 7, 30, 90, 180, 365, 800],
                              labels=["0-7 j", "8-30 j", "31-90 j", "91-180 j", "181-365 j", "plus d'un an"])
             par_delai = t.groupby(classes, observed=True)["annulee"].mean() * 100
-            fig, ax = plt.subplots(figsize=(6, 3.6))
-            ax.bar(par_delai.index.astype(str), par_delai.values)
+            fig, ax = plt.subplots(figsize=(8, 3.2))
+            ax.bar(par_delai.index.astype(str), par_delai.values, color=COULEUR_BARRES)
             ax.set_title("Taux d'annulation selon le délai de réservation"); ax.set_ylabel("%")
-            ax.tick_params(axis="x", rotation=30)
+            ax.tick_params(axis="x", rotation=20)
             st.pyplot(fig)
         with g2:
             par_segment = (t.groupby("segment")["annulee"].mean().sort_values() * 100)
-            fig, ax = plt.subplots(figsize=(6, 3.6))
-            ax.barh(par_segment.index, par_segment.values)
+            fig, ax = plt.subplots(figsize=(8, 3.2))
+            ax.barh(par_segment.index, par_segment.values, color=COULEUR_BARRES)
             ax.set_title("Taux d'annulation selon le segment"); ax.set_xlabel("%")
             st.pyplot(fig)
-
-        tab = pd.DataFrame({h: indicateurs(t[t["hotel"] == h]) for h in hotels}).T
-        tab = tab.rename(columns={"reservations": "réservations", "taux": "taux d'annulation",
-                                  "ca": "CA réalisé (€)", "nuits": "nuits vendues",
-                                  "prix": "prix moyen (€)", "ca_annule": "CA annulé (€)"})
-        tab["taux d'annulation"] = tab["taux d'annulation"].map(pc)
-        tab["prix moyen (€)"] = tab["prix moyen (€)"].map(lambda v: fr(v, 2))
-        for col in ["réservations", "CA réalisé (€)", "nuits vendues", "CA annulé (€)"]:
-            tab[col] = tab[col].map(fr)
-        st.subheader("Par hôtel")
-        st.dataframe(tab)
 
 with onglet2:
     st.write("Régression logistique entraînée sur les arrivées de 2015 et 2016, évaluée sur 2017. "
@@ -175,10 +184,17 @@ with onglet2:
     prevu = (proba_test >= seuil).astype(int)
     reference = 1 - y_test.mean()
     m = st.columns(4)
-    m[0].metric("Exactitude", pc(accuracy_score(y_test, prevu)), f"référence {pc(reference)}", delta_color="off")
-    m[1].metric("Précision", pc(precision_score(y_test, prevu, zero_division=0)))
-    m[2].metric("Rappel", pc(recall_score(y_test, prevu)))
-    m[3].metric("Réservations signalées", fr(prevu.sum()))
+    with m[0].container(border=True):
+        st.metric("Exactitude", pc(accuracy_score(y_test, prevu)), f"référence {pc(reference)}", delta_color="off",
+                  help="Part des prévisions justes")
+    with m[1].container(border=True):
+        st.metric("Précision", pc(precision_score(y_test, prevu, zero_division=0)),
+                  help="Parmi les réservations signalées, part qui s'annule vraiment")
+    with m[2].container(border=True):
+        st.metric("Rappel", pc(recall_score(y_test, prevu)),
+                  help="Parmi les annulations réelles, part repérée par le modèle")
+    with m[3].container(border=True):
+        st.metric("Réservations signalées", fr(prevu.sum()), help="Réservations dont le risque dépasse le seuil")
     st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule. "
                "Un écart d'environ 0,1 point avec le notebook est possible : le calcul du modèle dépend très légèrement de la machine.")
     cm = confusion_matrix(y_test, prevu)
