@@ -95,8 +95,9 @@ QUALITATIVES = ["hotel", "mois", "segment", "type_client", "depot", "delai_x_typ
 
 
 @st.cache_resource(show_spinner="Entraînement du modèle de prévision en cours, environ une minute au premier affichage...")
-def entrainer():
-    X = pd.get_dummies(propres[COLONNES], columns=QUALITATIVES, dtype=int)
+def entrainer(colonnes, qualitatives, nb_lignes):
+    # les trois arguments servent de clé au cache : le modèle est réentraîné si les variables ou les données changent
+    X = pd.get_dummies(propres[list(colonnes)], columns=list(qualitatives), dtype=int)
     y = propres["annulee"]
     train = propres["date_arrivee"] < "2017-01-01"              # entraînement : avant 2017
     # solveur exact : le résultat est le même que dans le notebook, sur toutes les machines
@@ -104,7 +105,7 @@ def entrainer():
     return modele, list(X.columns), modele.predict_proba(X[~train])[:, 1], y[~train]
 
 
-modele, colonnes_modele, proba_test, y_test = entrainer()
+modele, colonnes_modele, proba_test, y_test = entrainer(tuple(COLONNES), tuple(QUALITATIVES), len(propres))
 
 # ---------- 4. Page ----------
 st.title("Les annulations de deux hôtels portugais")
