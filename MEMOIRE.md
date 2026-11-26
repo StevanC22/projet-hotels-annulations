@@ -33,8 +33,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 - Écrire sans tics d'IA, guillemets droits, un tiret par sous-question dans les réponses de TD.
 - Dans la section "Usage de l'IA", mettre les prompts réels tels qu'envoyés.
 
-## À faire avant le rendu
-- Renommer le notebook avec les noms du groupe.
-- Publier sur Streamlit Community Cloud (dépôt GitHub, fichier principal `app.py`) et coller le lien dans le notebook.
-- Compléter la section "Usage de l'IA" avec les vrais prompts et les choix personnels.
-- Tester le lien en navigation privée, puis envoyer le lien GitHub par mail au professeur.
+## État avant le rendu
+- Fait : notebook renommé avec les noms du groupe, application publiée sur Streamlit Community Cloud (https://projet-courtes-diawara-leroux.streamlit.app/), lien collé dans le notebook, section "Usage de l'IA" complétée avec les vrais prompts.
+- Versions fixées dans requirements.txt (pandas, numpy, scikit-learn, matplotlib) ; streamlit non fixé car la version 1.51.0 ne s'installe pas sur Python 3.14 (pyarrow). Un écart d'environ 0,1 point de précision est possible entre le notebook (84,6 %) et l'application (84,7 %).
+- Reste à faire : tester le lien en navigation privée, puis envoyer le lien GitHub par mail au professeur.
