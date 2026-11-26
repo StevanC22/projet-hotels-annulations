@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score
 
 st.set_page_config(page_title="Annulations hôtelières", layout="wide")
 
@@ -26,6 +26,18 @@ def pc(proportion):
 
 
 # ---------- 1. Données propres (étape 1 du notebook) ----------
+CLASSES_DELAI = ["0-7 j", "8-30 j", "31-90 j", "91-180 j", "181-365 j", "plus d'un an"]
+
+
+def ajouter_variables(t):
+    # deux variables construites avec des colonnes connues à la réservation (étape 3.2 du notebook)
+    t = t.copy()
+    classe = pd.cut(t["delai_reservation"], [-1, 7, 30, 90, 180, 365, 800], labels=CLASSES_DELAI).astype(str)
+    t["delai_x_type"] = classe + " | " + t["type_client"]
+    t["segment_x_type"] = t["segment"] + " | " + t["type_client"]
+    return t
+
+
 @st.cache_data(show_spinner="Chargement et nettoyage des données...")
 def charger():
     d = pd.read_csv("reservations_hotels.csv")
@@ -34,6 +46,7 @@ def charger():
                  | (d["adultes"] == 0)                          # aucun adulte (un enfant ne réserve pas seul)
                  | (d["prix_nuit"] < 0) | (d["prix_nuit"] > 1000))  # prix absurde
     p = d[~anomalies].copy()
+    p = ajouter_variables(p)
     p["ca"] = p["nuits"] * p["prix_nuit"]                        # CA = nuits x prix par nuit
     p["periode"] = pd.to_datetime(p["date_arrivee"]).dt.to_period("M").dt.to_timestamp()
     return p, int(anomalies.sum())
@@ -76,8 +89,9 @@ def par_mois(t, cle, facteur):
 
 # ---------- 3. Modèle (étape 3 du notebook) ----------
 COLONNES = ["hotel", "mois", "delai_reservation", "nuits", "adultes", "enfants", "segment",
-            "type_client", "client_habitue", "annulations_precedentes", "depot", "prix_nuit"]
-QUALITATIVES = ["hotel", "mois", "segment", "type_client", "depot"]
+            "type_client", "client_habitue", "annulations_precedentes", "depot", "prix_nuit",
+            "delai_x_type", "segment_x_type"]
+QUALITATIVES = ["hotel", "mois", "segment", "type_client", "depot", "delai_x_type", "segment_x_type"]
 
 
 @st.cache_resource(show_spinner="Entraînement du modèle de prévision en cours, environ une minute au premier affichage...")
@@ -150,7 +164,7 @@ with onglet1:
         g1, g2 = st.columns(2)
         with g1:
             classes = pd.cut(t["delai_reservation"], [-1, 7, 30, 90, 180, 365, 800],
-                             labels=["0-7 j", "8-30 j", "31-90 j", "91-180 j", "181-365 j", "plus d'un an"])
+                             labels=CLASSES_DELAI)
             par_delai = t.groupby(classes, observed=True)["annulee"].mean() * 100
             fig, ax = plt.subplots(figsize=(8, 3.2))
             ax.bar(par_delai.index.astype(str), par_delai.values, color=COULEUR_BARRES)
@@ -186,17 +200,21 @@ with onglet2:
 
     prevu = (proba_test >= seuil).astype(int)
     reference = 1 - y_test.mean()
-    m = st.columns(4)
+    m = st.columns(5)
     with m[0].container(border=True):
+        st.metric("Score", pc(roc_auc_score(y_test, proba_test)),
+                  help="Score (AUC) : capacité du modèle à classer les réservations de la moins à la plus risquée, "
+                       "quel que soit le seuil. 50 % = hasard, 100 % = classement parfait")
+    with m[1].container(border=True):
         st.metric("Exactitude", pc(accuracy_score(y_test, prevu)), f"référence {pc(reference)}", delta_color="off",
                   help="Part des prévisions justes")
-    with m[1].container(border=True):
+    with m[2].container(border=True):
         st.metric("Précision", pc(precision_score(y_test, prevu, zero_division=0)),
                   help="Parmi les réservations signalées, part qui s'annule vraiment")
-    with m[2].container(border=True):
+    with m[3].container(border=True):
         st.metric("Rappel", pc(recall_score(y_test, prevu)),
                   help="Parmi les annulations réelles, part repérée par le modèle")
-    with m[3].container(border=True):
+    with m[4].container(border=True):
         st.metric("Réservations signalées", fr(prevu.sum()), help="Réservations dont le risque dépasse le seuil")
     st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule.")
     cm = confusion_matrix(y_test, prevu)
@@ -226,7 +244,8 @@ with onglet2:
                            "adultes": adultes, "enfants": enfants, "segment": segment,
                            "type_client": type_client, "client_habitue": habitue,
                            "annulations_precedentes": precedentes, "depot": depot, "prix_nuit": prix}])
-    base = pd.concat([propres[COLONNES].head(1), ligne], ignore_index=True)
+    ligne = ajouter_variables(ligne)
+    base = pd.concat([propres[COLONNES].head(1), ligne[COLONNES]], ignore_index=True)
     X_ligne = pd.get_dummies(base, columns=QUALITATIVES, dtype=int).iloc[[1]].reindex(columns=colonnes_modele, fill_value=0)
     risque = modele.predict_proba(X_ligne)[0, 1]
     st.metric("Risque d'annulation", pc(risque))

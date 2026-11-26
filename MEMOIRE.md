@@ -22,12 +22,12 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 
 ## Modèle (étape 3)
 - Régression logistique (`max_iter=3000`), entraînement sur les arrivées avant le 01/01/2017 (77 894 lignes), test sur 2017 (40 446 lignes).
-- Variables : hotel, mois, delai_reservation, nuits, adultes, enfants, segment, type_client, client_habitue, annulations_precedentes, depot, prix_nuit.
+- Variables : hotel, mois, delai_reservation, nuits, adultes, enfants, segment, type_client, client_habitue, annulations_precedentes, depot, prix_nuit, plus deux variables construites : delai_x_type (classe de délai x type de client) et segment_x_type. Choisies sur validation dans la période d'entraînement ; elles font passer le score (AUC) de 77,4 % à 79,5 %. Le professeur dit que 75 à 90 % est idéal. Gradient boosting (80,6 %) et demandes_speciales / chambre_changee (fuite) écartés.
 - Saisonnalité : mois d'arrivée gardé (Algarve 15,0 % en janvier, 33,7 % en août ; Lisbonne 37,1 % à 46,4 %). Variantes testées sans gain (mois par hôtel, saison, semaine, jour d'arrivée) : exactitude 72,2 à 72,4 %, AUC 0,77.
 - Écartées : statut_final et annulee (la cible), chambre_changee (connue à l'arrivée), demandes_speciales (peut changer après la réservation), reservation, date_arrivee, annee.
-- Référence "personne n'annule" : 61,2 % d'exactitude. Modèle au seuil 0,5 : exactitude 72,3 %, précision 84,7 %, rappel 34,8 %. AUC 0,774.
-- Seuils : 0,6 pour la surréservation (précision 96,8 %, rappel 27,3 %), 0,3 pour les relances (précision 53,4 %, rappel 80,4 %).
-- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : 69,5 %.
+- Référence "personne n'annule" : 61,2 % d'exactitude. Score (AUC) 79,5 %, affiché sous le nom "Score" dans le notebook et l'application. Modèle au seuil 0,5 : exactitude 72,7 %, précision 77,9 %, rappel 41,4 % (8 333 réservations signalées).
+- Seuils : 0,6 pour la surréservation (précision 95,7 %, rappel 27,4 %), 0,3 pour les relances (précision 55,4 %, rappel 83,7 %).
+- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : score 76,2 %, exactitude 70,8 %.
 - Points à vérifier avec l'hôtel : 99,4 % des dépôts non remboursables sont annulés, 94,5 % des clients avec une annulation précédente.
 
 ## Règles de travail
@@ -38,5 +38,5 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 ## État avant le rendu
 - Fait : notebook renommé avec les noms du groupe, application publiée sur Streamlit Community Cloud (https://projet-courtes-diawara-leroux.streamlit.app/), lien collé dans le notebook, section "Usage de l'IA" complétée avec les vrais prompts.
 - Versions fixées dans requirements.txt (pandas, numpy, scikit-learn, matplotlib) ; streamlit non fixé car la version 1.51.0 ne s'installe pas sur Python 3.14 (pyarrow).
-- Modèle : LogisticRegression(solver="newton-cholesky", max_iter=3000) dans le notebook et dans app.py. Le solveur par défaut donnait 84,3 %, 84,6 % ou 84,7 % de précision à 0,5 selon la machine ; newton-cholesky donne partout le même résultat (après la règle "au moins un adulte" : précision 84,7 %, rappel 34,8 %, 6 448 réservations signalées). Rappel à 0,3 : 80,4 %.
+- Modèle : LogisticRegression(solver="newton-cholesky", max_iter=3000) dans le notebook et dans app.py. Le solveur par défaut donnait 84,3 %, 84,6 % ou 84,7 % de précision à 0,5 selon la machine ; newton-cholesky donne partout le même résultat (chiffres actuels dans la section Modèle).
 - Reste à faire : tester le lien en navigation privée, puis envoyer le lien GitHub par mail au professeur.
