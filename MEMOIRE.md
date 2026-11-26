@@ -23,6 +23,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 ## Modèle (étape 3)
 - Régression logistique (`max_iter=3000`), entraînement sur les arrivées avant le 01/01/2017 (77 894 lignes), test sur 2017 (40 446 lignes).
 - Variables : hotel, mois, delai_reservation, nuits, adultes, enfants, segment, type_client, client_habitue, annulations_precedentes, depot, prix_nuit.
+- Saisonnalité : mois d'arrivée gardé (Algarve 15,0 % en janvier, 33,7 % en août ; Lisbonne 37,1 % à 46,4 %). Variantes testées sans gain (mois par hôtel, saison, semaine, jour d'arrivée) : exactitude 72,2 à 72,4 %, AUC 0,77.
 - Écartées : statut_final et annulee (la cible), chambre_changee (connue à l'arrivée), demandes_speciales (peut changer après la réservation), reservation, date_arrivee, annee.
 - Référence "personne n'annule" : 61,2 % d'exactitude. Modèle au seuil 0,5 : exactitude 72,3 %, précision 84,7 %, rappel 34,8 %. AUC 0,774.
 - Seuils : 0,6 pour la surréservation (précision 96,8 %, rappel 27,3 %), 0,3 pour les relances (précision 53,4 %, rappel 80,4 %).
