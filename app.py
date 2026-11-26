@@ -198,7 +198,8 @@ with onglet2:
     prix = b.number_input("Prix par nuit (€)", 0.0, 1000.0, 100.0)
     segment = c3.selectbox("Segment", sorted(propres["segment"].unique()), index=1)
     type_client = c3.selectbox("Type de client", sorted(propres["type_client"].unique()))
-    depot = c3.selectbox("Dépôt", sorted(propres["depot"].unique()))
+    depots = sorted(propres["depot"].unique())
+    depot = c3.selectbox("Dépôt", depots, index=depots.index("Sans dépôt"))
     habitue = c3.selectbox("Client habitué", [0, 1])
     precedentes = c3.number_input("Annulations précédentes", 0, 30, 0)
 
