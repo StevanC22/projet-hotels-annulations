@@ -9,23 +9,24 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 
 ## Choix faits (étape 1)
 - Enfants manquants (4) : remplacés par 0.
-- Lignes retirées (827 au total) : 715 réservations de 0 nuit, 180 sans voyageur, 1 prix négatif, 1 prix à 5 400 € la nuit.
+- Lignes retirées (1 050 au total) : 715 réservations de 0 nuit, 403 sans adulte (180 sans voyageur et 223 avec enfants seuls : un enfant ne réserve pas seul, remarque du professeur), 1 prix négatif, 1 prix à 5 400 € la nuit.
+- Autres incohérences testées et non retenues (AUC inchangé à 0,77) : prix à 0 hors segment Offert, plus de 10 adultes, plus de 30 nuits, client non habitué avec annulations précédentes.
 - Lignes gardées : prix à 0 € avec au moins une nuit (1 244, séjours offerts), délais de plus d'un an (3 148), lignes identiques (35 652, pas des doublons faute d'identifiant client).
-- Fichier propre : 118 563 réservations. CA d'une réservation = nuits x prix_nuit.
+- Fichier propre : 118 340 réservations. CA d'une réservation = nuits x prix_nuit.
 
 ## Indicateurs (étape 2)
 - Taux d'annulation : annulee moyenne sur toutes les réservations propres.
 - CA réalisé, nuits vendues, prix moyen par nuit (CA / nuits) : sur les séjours effectués (annulee = 0).
 - CA annulé : somme de ca sur les réservations annulées (annulee = 1).
-- Résultats : taux 37,3 % (Lisbonne 41,9 %, Algarve 28,0 %), CA réalisé 25 986 976 €, 254 282 nuits, 102,20 € la nuit, CA annulé 16 721 837 €.
+- Résultats : taux 37,3 % (Lisbonne 41,9 %, Algarve 28,0 %), CA réalisé 25 950 266 €, 253 816 nuits, 102,24 € la nuit, CA annulé 16 693 902 €.
 
 ## Modèle (étape 3)
-- Régression logistique (`max_iter=3000`), entraînement sur les arrivées avant le 01/01/2017 (78 054 lignes), test sur 2017 (40 509 lignes).
+- Régression logistique (`max_iter=3000`), entraînement sur les arrivées avant le 01/01/2017 (77 894 lignes), test sur 2017 (40 446 lignes).
 - Variables : hotel, mois, delai_reservation, nuits, adultes, enfants, segment, type_client, client_habitue, annulations_precedentes, depot, prix_nuit.
 - Écartées : statut_final et annulee (la cible), chambre_changee (connue à l'arrivée), demandes_speciales (peut changer après la réservation), reservation, date_arrivee, annee.
-- Référence "personne n'annule" : 61,2 % d'exactitude. Modèle au seuil 0,5 : exactitude 72,2 %, précision 84,3 %, rappel 34,8 %.
+- Référence "personne n'annule" : 61,2 % d'exactitude. Modèle au seuil 0,5 : exactitude 72,3 %, précision 84,7 %, rappel 34,8 %. AUC 0,774.
 - Seuils : 0,6 pour la surréservation (précision 96,8 %, rappel 27,3 %), 0,3 pour les relances (précision 53,4 %, rappel 80,4 %).
-- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : 69,6 %.
+- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : 69,5 %.
 - Points à vérifier avec l'hôtel : 99,4 % des dépôts non remboursables sont annulés, 94,5 % des clients avec une annulation précédente.
 
 ## Règles de travail
@@ -36,5 +37,5 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 ## État avant le rendu
 - Fait : notebook renommé avec les noms du groupe, application publiée sur Streamlit Community Cloud (https://projet-courtes-diawara-leroux.streamlit.app/), lien collé dans le notebook, section "Usage de l'IA" complétée avec les vrais prompts.
 - Versions fixées dans requirements.txt (pandas, numpy, scikit-learn, matplotlib) ; streamlit non fixé car la version 1.51.0 ne s'installe pas sur Python 3.14 (pyarrow).
-- Modèle : LogisticRegression(solver="newton-cholesky", max_iter=3000) dans le notebook et dans app.py. Le solveur par défaut donnait 84,3 %, 84,6 % ou 84,7 % de précision à 0,5 selon la machine ; newton-cholesky donne partout 84,6 % (rappel 34,8 %, 6 465 réservations signalées). Rappel à 0,3 : 80,4 %.
+- Modèle : LogisticRegression(solver="newton-cholesky", max_iter=3000) dans le notebook et dans app.py. Le solveur par défaut donnait 84,3 %, 84,6 % ou 84,7 % de précision à 0,5 selon la machine ; newton-cholesky donne partout le même résultat (après la règle "au moins un adulte" : précision 84,7 %, rappel 34,8 %, 6 448 réservations signalées). Rappel à 0,3 : 80,4 %.
 - Reste à faire : tester le lien en navigation privée, puis envoyer le lien GitHub par mail au professeur.

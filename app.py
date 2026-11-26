@@ -31,7 +31,7 @@ def charger():
     d = pd.read_csv("reservations_hotels.csv")
     d["enfants"] = d["enfants"].fillna(0)                       # 4 valeurs manquantes -> 0
     anomalies = ((d["nuits"] == 0)                              # séjour de 0 nuit
-                 | ((d["adultes"] + d["enfants"]) == 0)         # aucun voyageur
+                 | (d["adultes"] == 0)                          # aucun adulte (un enfant ne réserve pas seul)
                  | (d["prix_nuit"] < 0) | (d["prix_nuit"] > 1000))  # prix absurde
     p = d[~anomalies].copy()
     p["ca"] = p["nuits"] * p["prix_nuit"]                        # CA = nuits x prix par nuit
