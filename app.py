@@ -179,7 +179,8 @@ with onglet2:
     m[1].metric("Précision", pc(precision_score(y_test, prevu, zero_division=0)))
     m[2].metric("Rappel", pc(recall_score(y_test, prevu)))
     m[3].metric("Réservations signalées", fr(prevu.sum()))
-    st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule.")
+    st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule. "
+               "Un écart d'environ 0,1 point avec le notebook est possible : le calcul du modèle dépend très légèrement de la machine.")
     cm = confusion_matrix(y_test, prevu)
     st.dataframe(pd.DataFrame(cm, index=["réel : séjour", "réel : annulée"],
                               columns=["prévu : séjour", "prévu : annulée"]))
