@@ -4,7 +4,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 
 ## Contexte
 - Étudiant : Stevan, Master 1 CGAO (parcours SICG), IGR-IAE Rennes. Projet en groupe de 2 ou 3, noté.
-- Rendu : notebook `Projet_NOM1_NOM2.ipynb` (à renommer avec les vrais noms), lien Streamlit en `.streamlit.app` (ouvert sans compte), fichier `app.py`, lien GitHub envoyé par mail au professeur.
+- Rendu : notebook `Projet_COURTES_DIAWARA_LEROUX.ipynb`, lien Streamlit en `.streamlit.app` (ouvert sans compte), fichier `app.py`, lien GitHub envoyé par mail au professeur.
 - Données : `reservations_hotels.csv`, 119 390 réservations (Lisbonne et Algarve, arrivées du 01/07/2015 au 31/08/2017), 19 colonnes, une ligne = une réservation. Source : Antonio, de Almeida et Nunes, Hotel booking demand datasets, Data in Brief, 2019, CC BY 4.0.
 
 ## Choix faits (étape 1)
