@@ -33,6 +33,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 
 ## Règles de travail
 - Chaque chiffre affiché dans `app.py` doit être celui du notebook.
+- Projet de groupe : dans le notebook, écrire avec "on" ou "nous", jamais "je".
 - Écrire sans tics d'IA, guillemets droits, un tiret par sous-question dans les réponses de TD.
 - Dans la section "Usage de l'IA", mettre les prompts réels tels qu'envoyés.
 
