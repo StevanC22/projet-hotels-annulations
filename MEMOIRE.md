@@ -25,7 +25,7 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 - Écartées : statut_final et annulee (la cible), chambre_changee (connue à l'arrivée), demandes_speciales (peut changer après la réservation), reservation, date_arrivee, annee.
 - Référence "personne n'annule" : 61,2 % d'exactitude. Modèle au seuil 0,5 : exactitude 72,2 %, précision 84,3 %, rappel 34,8 %.
 - Seuils : 0,6 pour la surréservation (précision 96,8 %, rappel 27,3 %), 0,3 pour les relances (précision 53,4 %, rappel 80,4 %).
-- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : 69,5 %.
+- Avec statut_final (fuite de données) : 100 %, inutilisable. Sans la variable depot : 69,6 %.
 - Points à vérifier avec l'hôtel : 99,4 % des dépôts non remboursables sont annulés, 94,5 % des clients avec une annulation précédente.
 
 ## Règles de travail
@@ -35,5 +35,6 @@ Ce fichier sert de mémoire à l'assistant d'IA : à relire au début de chaque 
 
 ## État avant le rendu
 - Fait : notebook renommé avec les noms du groupe, application publiée sur Streamlit Community Cloud (https://projet-courtes-diawara-leroux.streamlit.app/), lien collé dans le notebook, section "Usage de l'IA" complétée avec les vrais prompts.
-- Versions fixées dans requirements.txt (pandas, numpy, scikit-learn, matplotlib) ; streamlit non fixé car la version 1.51.0 ne s'installe pas sur Python 3.14 (pyarrow). Un écart d'environ 0,1 point de précision est possible entre le notebook (84,6 %) et l'application (84,7 %).
+- Versions fixées dans requirements.txt (pandas, numpy, scikit-learn, matplotlib) ; streamlit non fixé car la version 1.51.0 ne s'installe pas sur Python 3.14 (pyarrow).
+- Modèle : LogisticRegression(solver="newton-cholesky", max_iter=3000) dans le notebook et dans app.py. Le solveur par défaut donnait 84,3 %, 84,6 % ou 84,7 % de précision à 0,5 selon la machine ; newton-cholesky donne partout 84,6 % (rappel 34,8 %, 6 465 réservations signalées). Rappel à 0,3 : 80,4 %.
 - Reste à faire : tester le lien en navigation privée, puis envoyer le lien GitHub par mail au professeur.

@@ -85,7 +85,8 @@ def entrainer():
     X = pd.get_dummies(propres[COLONNES], columns=QUALITATIVES, dtype=int)
     y = propres["annulee"]
     train = propres["date_arrivee"] < "2017-01-01"              # entraînement : avant 2017
-    modele = LogisticRegression(max_iter=3000).fit(X[train], y[train])
+    # solveur exact : le résultat est le même que dans le notebook, sur toutes les machines
+    modele = LogisticRegression(solver="newton-cholesky", max_iter=3000).fit(X[train], y[train])
     return modele, list(X.columns), modele.predict_proba(X[~train])[:, 1], y[~train]
 
 
@@ -100,9 +101,11 @@ st.caption(f"{fr(len(propres))} réservations propres, arrivées du 1er juillet 
 onglet1, onglet2 = st.tabs(["Indicateurs de gestion", "Prévoir une annulation"])
 
 with onglet1:
-    f1, f2 = st.columns(2)
-    hotels = f1.multiselect("Hôtel", ["Lisbonne", "Algarve"], default=["Lisbonne", "Algarve"])
-    annees = f2.multiselect("Année d'arrivée", [2015, 2016, 2017], default=[2015, 2016, 2017])
+    with st.sidebar:
+        st.header("Filtres")
+        hotels = st.multiselect("Hôtel", ["Lisbonne", "Algarve"], default=["Lisbonne", "Algarve"])
+        annees = st.multiselect("Année d'arrivée", [2015, 2016, 2017], default=[2015, 2016, 2017])
+        st.caption("Les filtres s'appliquent à l'onglet « Indicateurs de gestion ».")
     t = propres[propres["hotel"].isin(hotels) & propres["annee"].isin(annees)]
 
     if t.empty:
@@ -195,8 +198,7 @@ with onglet2:
                   help="Parmi les annulations réelles, part repérée par le modèle")
     with m[3].container(border=True):
         st.metric("Réservations signalées", fr(prevu.sum()), help="Réservations dont le risque dépasse le seuil")
-    st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule. "
-               "Un écart d'environ 0,1 point avec le notebook est possible : le calcul du modèle dépend très légèrement de la machine.")
+    st.caption("Mesures sur les " + fr(len(y_test)) + " réservations de 2017. Référence : prévoir que personne n'annule.")
     cm = confusion_matrix(y_test, prevu)
     st.dataframe(pd.DataFrame(cm, index=["réel : séjour", "réel : annulée"],
                               columns=["prévu : séjour", "prévu : annulée"]))
